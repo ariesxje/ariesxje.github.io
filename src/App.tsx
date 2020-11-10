@@ -27,6 +27,7 @@ const frameCount = 147;
 const animateDuration = 450; //millisecond
 
 function App() {
+  const imageCacheRef = useRef<Array<any>>([]);
   const canvasRef = useRef<any>(null);
   const imgRef = useRef<any>(new Image());
   const timeRef = useRef<Date>(new Date());
@@ -51,8 +52,7 @@ function App() {
 
   const updateImage = (context: any, index: number) => {
     currentFrameRef.current = index;
-    imgRef.current.src = currentFrame(index);
-    context.drawImage(imgRef.current, 0, 0);
+    context.drawImage(imageCacheRef.current[index], 0, 0);
   }
 
   useEffect(() => {
@@ -61,6 +61,7 @@ function App() {
     for(let i = 0; i <= frameCount; i++) {
       const preloadImg = new Image();
       preloadImg.src = currentFrame(i);
+      imageCacheRef.current[i] = preloadImg;
     }
     const canvas = canvasRef.current;
     if (canvas) {
