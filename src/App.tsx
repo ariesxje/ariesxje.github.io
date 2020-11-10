@@ -8,28 +8,49 @@ const currentFrame = (index:number):string => (
 
 const html = document.documentElement;
 const frameCount = 147;
+const animateDuration = 100; //millisecond
 
 function App() {
   const canvasRef = useRef<any>(null);
   const imgRef = useRef<any>(new Image());
+  const timeRef = useRef<Date>(new Date());
+  const currentFrameRef = useRef<number>(1);
+  const destinationFrameRef = useRef<number>(1);
+
+  const animate = (context:any) => {
+    const now: Date = new Date();
+    const timeElapsed = +now - +timeRef.current;
+    if (timeElapsed > animateDuration) {
+      return;
+    }
+    const currentFrame = Math.floor(timeElapsed / animateDuration * (destinationFrameRef.current - currentFrameRef.current) + currentFrameRef.current);
+    updateImage(context, currentFrame);
+    requestAnimationFrame(() => animate(context))
+  }
 
   const updateImage = (context: any, index: number) => {
+    currentFrameRef.current = index;
     imgRef.current.src = currentFrame(index);
     context.drawImage(imgRef.current, 0, 0);
   }
 
-  for(let i = 0; i <= frameCount; i++) {
-    const preloadImg = new Image();
-    preloadImg.src = currentFrame(i);
+  const interpolate = (to:number) => {
+
   }
 
   useEffect(() => {
+    //preload images
+    //TODO: there must be a better way
+    for(let i = 0; i <= frameCount; i++) {
+      const preloadImg = new Image();
+      preloadImg.src = currentFrame(i);
+    }
     const canvas = canvasRef.current;
     if (canvas) {
       canvas.width = 1158;
       canvas.height = 770;
       const context = canvas.getContext('2d');
-      imgRef.current.src = currentFrame(1); // we'll make this dynamic in the next step, for now we'll just load image 1 of our sequence
+      imgRef.current.src = currentFrame(currentFrameRef.current);
       imgRef.current.onload=function(){
         context.drawImage(imgRef.current, 0, 0);
       }
@@ -37,11 +58,14 @@ function App() {
         const scrollTop = html.scrollTop;
         const maxScrollTop = (html.scrollHeight - window.innerHeight) / 4;
         const scrollFraction = scrollTop / maxScrollTop;
-        const frameIndex = Math.min(
-          frameCount - 1,
-          Math.floor(scrollFraction * frameCount)
-        );
-        requestAnimationFrame(() => updateImage(context, frameIndex + 1))
+        const frameIndex = Math.max(1,
+          Math.min(
+            frameCount - 1,
+            Math.floor(scrollFraction * frameCount)
+        ));
+        timeRef.current = new Date();
+        destinationFrameRef.current = frameIndex;
+        requestAnimationFrame(() => animate(context));
       })
     }
   }, [])
