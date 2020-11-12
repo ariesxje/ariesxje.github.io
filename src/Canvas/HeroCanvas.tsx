@@ -7,7 +7,6 @@ const currentFrame = (index:number):string => (
 )
 
 const frameCount = 140;
-const animateDuration = 450; //millisecond
 const SCALE_MIN = 0.25;
 const SCALE_MAX = 0.45;
 
@@ -15,33 +14,26 @@ const HeroCanvas = (props: any) => {
   const imageCacheRef = useRef<Array<any>>([]);
   const canvasRef = useRef<any>(null);
   const imgRef = useRef<any>(new Image());
-  const timeRef = useRef<Date>(new Date());
-  const currentFrameRef = useRef<number>(1);
-  const startFrameRef = useRef<number>(1);
-  const destinationFrameRef = useRef<number>(1);
-  const animationIsOn = useRef<Boolean>(false);
+  const requestAnimationFrameRef = useRef<number>(0);
 
   const [scrollTopProps, setScrollTop] = useSpring(() => ({scrollTop: document.documentElement.scrollTop}));
   const interpScale = scrollTopProps.scrollTop.interpolate(scrollTop => {
     const maxScrollTop = document.documentElement.scrollHeight - window.innerHeight;
     const scale = scrollTop / maxScrollTop * (SCALE_MIN - SCALE_MAX) + SCALE_MAX;
-    return `matrix(${scale},0,0,${scale},0,0)`});
-
-  const animate = () => {
-    const now: Date = new Date();
-    const timeElapsed = +now - +timeRef.current;
-    const timeProgress = timeElapsed/animateDuration;
-    if (timeElapsed > animateDuration) {
-      animationIsOn.current = false;
-      return;
+    // canvas animation start
+    const scrollFraction = scrollTop / (maxScrollTop * 0.25);
+    const frameIndex = Math.max(1,
+      Math.min(
+        frameCount - 1,
+        Math.floor(scrollFraction * frameCount)
+      ));
+    if (!isNaN(frameIndex)) {
+      requestAnimationFrameRef.current = requestAnimationFrame(() => {
+        updateImage(canvasRef.current, imageCacheRef.current[frameIndex])
+      })
     }
-    const currentFrameIndex = Math.floor(easeOutCirc(timeProgress) * (destinationFrameRef.current - startFrameRef.current) + startFrameRef.current);
-    animationIsOn.current = true;
-    currentFrameRef.current = currentFrameIndex;
-    console.log(currentFrameIndex)
-    updateImage(canvasRef.current, imageCacheRef.current[currentFrameIndex]);
-    requestAnimationFrame(animate)
-  }
+    // canvas animation end
+    return `matrix(${scale},0,0,${scale},0,0)`});
 
   const updateImage = (canvas: any, image: any) => {
     var wrh = image.width / image.height;
@@ -59,19 +51,6 @@ const HeroCanvas = (props: any) => {
   const handleScroll = () => {
     const scrollTop = document.documentElement.scrollTop;
     setScrollTop({scrollTop});
-    const maxScrollTop = document.documentElement.scrollHeight - window.innerHeight;
-    const scrollFraction = scrollTop / (maxScrollTop * 0.25);
-    const frameIndex = Math.max(1,
-      Math.min(
-        frameCount - 1,
-        Math.floor(scrollFraction * frameCount)
-      ));
-    destinationFrameRef.current = frameIndex;
-    if (!animationIsOn.current) {
-      timeRef.current = new Date();
-      startFrameRef.current = currentFrameRef.current;
-      requestAnimationFrame(animate);
-    }
   }
 
   useEffect(() => {
@@ -87,7 +66,7 @@ const HeroCanvas = (props: any) => {
       canvas.width = 1458;
       canvas.height = 820;
       const context = canvas.getContext('2d');
-      imgRef.current.src = currentFrame(currentFrameRef.current);
+      imgRef.current = imageCacheRef.current[0];
       imgRef.current.onload=function(){
         updateImage(canvas, imgRef.current)
       }
@@ -96,6 +75,7 @@ const HeroCanvas = (props: any) => {
 
     return () => {
       window.removeEventListener('scroll', handleScroll)
+      window.cancelAnimationFrame(requestAnimationFrameRef.current);
     }
   }, [])
   return (
