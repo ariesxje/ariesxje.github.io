@@ -14,9 +14,14 @@ const easeOutCubic = (x: number): number => {
   return 1 - Math.pow(1 - x, 3);
 }
 
+const easeOutCirc = (x: number): number => {
+  return Math.sqrt(1 - Math.pow(x - 1, 2));
+}
+
 export {
   easeOutExpo,
   easeOutCubic,
   easeOutQuart,
-  easeOutQuint
+  easeOutQuint,
+  easeOutCirc
 }

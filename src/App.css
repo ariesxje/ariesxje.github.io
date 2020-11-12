@@ -4,14 +4,35 @@ html {
 
 body {
   background: #000;
+}
+
+.scroll-sequence {
+  position: absolute;
   height: 500vh;
+  width: 100%;
+  top: 0;
+}
+
+.sequence-container {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.canvas-sequence {
+  position: fixed;
+  position: -webkit-sticky;
+  top: 0;
+  overflow: hidden;
+  width: 100%;
 }
 
 canvas {
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  max-height: 100vh;
-  max-width: 100vw;
-  transform: translate(-50%, -50%);
+  position: absolute;
+  /*left: 50%;*/
+  /*top: 50%;*/
+  /*max-height: 100vh;*/
+  /*max-width: 100vw;*/
+  /*transform: translate(-50%, -50%);*/
 }
